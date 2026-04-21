@@ -119,7 +119,8 @@ function checkCollisions() {
 }
 
 function update(dt) {
-  if (state === 'playing') updatePlaying(dt);
+  if (state === 'playing')         updatePlaying(dt);
+  else if (state === 'wave-clear') updateWaveClear(dt);
 }
 
 function updatePlaying(dt) {
@@ -156,6 +157,32 @@ function updatePlaying(dt) {
 
   enemies = enemies.filter(e => !e.dead);
   bullets = bullets.filter(b => !b.dead);
+
+  if (player.hp <= 0) { state = 'game-over'; return; }
+
+  if (spawnQueue.length === 0 && enemies.length === 0) {
+    if (waveIndex === WAVES.length - 1) {
+      state = 'win';
+    } else {
+      state = 'wave-clear';
+      waveClearTimer = WAVE_CLEAR_DURATION;
+      waveClearPhase = 'complete';
+    }
+  }
+}
+
+function updateWaveClear(dt) {
+  waveClearTimer -= dt;
+  if (waveClearTimer <= 0) {
+    if (waveClearPhase === 'complete') {
+      waveClearPhase = 'incoming';
+      waveClearTimer = WAVE_CLEAR_DURATION;
+    } else {
+      waveIndex++;
+      startWave(waveIndex);
+      state = 'playing';
+    }
+  }
 }
 
 canvas.addEventListener('click', () => {

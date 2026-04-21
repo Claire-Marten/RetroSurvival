@@ -44,6 +44,19 @@ function startWave(index) {
   bullets = [];
 }
 
+function spawnEnemy(type) {
+  let x, y, attempts = 0;
+  do {
+    const edge = Math.floor(Math.random() * 4);
+    if (edge === 0)      { x = Math.random() * W; y = 0; }
+    else if (edge === 1) { x = W;                 y = Math.random() * H; }
+    else if (edge === 2) { x = Math.random() * W; y = H; }
+    else                 { x = 0;                 y = Math.random() * H; }
+    attempts++;
+  } while (attempts < 20 && enemies.some(e => Math.hypot(e.x - x, e.y - y) < 60));
+  enemies.push(new Enemy(type, x, y));
+}
+
 function drawBackground() {
   ctx.fillStyle = '#16213e';
   ctx.fillRect(0, 0, W, H);
@@ -81,6 +94,7 @@ function draw() {
   }
 
   for (const b of bullets) b.draw(ctx);
+  for (const e of enemies) if (!e.dead) e.draw(ctx);
   player.draw(ctx);
 }
 
@@ -97,10 +111,25 @@ function updatePlaying(dt) {
 
   player.update(dt, keys, mouseX, mouseY);
 
+  // Spawn next enemy from queue
+  if (spawnQueue.length > 0) {
+    spawnTimer -= dt;
+    if (spawnTimer <= 0) {
+      spawnEnemy(spawnQueue.shift());
+      spawnTimer = SPAWN_INTERVAL;
+    }
+  }
+
+  // Move enemies
+  for (const enemy of enemies) {
+    if (!enemy.dead) enemy.update(dt, player.x, player.y);
+  }
+
   for (const bullet of bullets) {
     bullet.update(dt);
     if (bullet.isOutOfBounds()) bullet.dead = true;
   }
+  enemies = enemies.filter(e => !e.dead);
   bullets = bullets.filter(b => !b.dead);
 }
 

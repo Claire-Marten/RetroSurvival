@@ -21,8 +21,8 @@ class Player {
     this.x = Math.max(this.radius, Math.min(W - this.radius, this.x + dx * this.speed * dt));
     this.y = Math.max(this.radius, Math.min(H - this.radius, this.y + dy * this.speed * dt));
     this.angle = Math.atan2(mouseY - this.y, mouseX - this.x);
-    if (this.shootCooldown > 0) this.shootCooldown -= dt;
-    if (this.invincibleTimer > 0) this.invincibleTimer -= dt;
+    this.shootCooldown = Math.max(0, this.shootCooldown - dt);
+    this.invincibleTimer = Math.max(0, this.invincibleTimer - dt);
   }
 
   shoot(mouseX, mouseY) {

@@ -90,3 +90,90 @@ class Bullet {
     ctx.restore();
   }
 }
+
+const ENEMY_TYPES = {
+  grunt:   { radius: 12, hp: 1, speed: 90,  fireRate: 2.0, color: '#ff6b35', pattern: 'single', bulletSpeed: 200 },
+  speeder: { radius: 14, hp: 1, speed: 160, fireRate: 0.6, color: '#ffd166', pattern: 'single', bulletSpeed: 350 },
+  tank:    { radius: 22, hp: 3, speed: 55,  fireRate: 1.5, color: '#c9184a', pattern: 'spread', bulletSpeed: 150 },
+};
+
+class Enemy {
+  constructor(type, x, y) {
+    const cfg = ENEMY_TYPES[type];
+    this.type = type;
+    this.x = x;
+    this.y = y;
+    this.radius = cfg.radius;
+    this.hp = cfg.hp;
+    this.maxHp = cfg.hp;
+    this.speed = cfg.speed;
+    this.fireRate = cfg.fireRate;
+    this.color = cfg.color;
+    this.pattern = cfg.pattern;
+    this.bulletSpeed = cfg.bulletSpeed;
+    this.fireTimer = Math.random() * cfg.fireRate;
+    this.spinAngle = 0;
+    this.spinSpeed = (Math.random() * 1.5 + 0.5) * (Math.random() < 0.5 ? 1 : -1);
+    this.dead = false;
+    this.hitFlash = 0;
+  }
+
+  update(dt, playerX, playerY) {
+    const dx = playerX - this.x;
+    const dy = playerY - this.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > 0) {
+      this.x += (dx / dist) * this.speed * dt;
+      this.y += (dy / dist) * this.speed * dt;
+    }
+    this.spinAngle += this.spinSpeed * dt;
+    this.fireTimer -= dt;
+    if (this.hitFlash > 0) this.hitFlash -= dt;
+  }
+
+  tryShoot(playerX, playerY) {
+    if (this.fireTimer > 0) return [];
+    this.fireTimer = this.fireRate;
+    const angle = Math.atan2(playerY - this.y, playerX - this.x);
+    if (this.pattern === 'single') {
+      return [new Bullet(this.x, this.y, angle, this.bulletSpeed, this.color, 4, 'enemy')];
+    }
+    return [-0.35, 0, 0.35].map(offset =>
+      new Bullet(this.x, this.y, angle + offset, this.bulletSpeed, this.color, 4, 'enemy')
+    );
+  }
+
+  takeDamage() {
+    this.hp -= 1;
+    this.hitFlash = 0.12;
+    if (this.hp <= 0) this.dead = true;
+  }
+
+  draw(ctx) {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.spinAngle);
+    const color = this.hitFlash > 0 ? '#ffffff' : this.color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = color;
+    const r = this.radius;
+    ctx.beginPath();
+    ctx.moveTo(0, -r);
+    ctx.lineTo(r, 0);
+    ctx.lineTo(0, r);
+    ctx.lineTo(-r, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    if (this.maxHp > 1) {
+      for (let i = 0; i < this.maxHp; i++) {
+        ctx.fillStyle = i < this.hp ? '#ffffff' : 'rgba(255,255,255,0.2)';
+        ctx.beginPath();
+        ctx.arc(-((this.maxHp - 1) * 5) + i * 10, r + 8, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+}

@@ -120,9 +120,12 @@ function updatePlaying(dt) {
     }
   }
 
-  // Move enemies
+  // Move enemies and collect their bullets
   for (const enemy of enemies) {
-    if (!enemy.dead) enemy.update(dt, player.x, player.y);
+    if (enemy.dead) continue;
+    enemy.update(dt, player.x, player.y);
+    const newBullets = enemy.tryShoot(player.x, player.y);
+    bullets.push(...newBullets);
   }
 
   for (const bullet of bullets) {

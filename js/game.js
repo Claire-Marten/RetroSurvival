@@ -1,6 +1,6 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const SPAWN_INTERVAL = 1.5;
+const SPAWN_INTERVALS = [1.2, 1.0, 0.8];
 const WAVE_CLEAR_DURATION = 2.0;
 
 // Input
@@ -42,6 +42,10 @@ function startWave(index) {
   spawnTimer = 0;
   enemies = [];
   bullets = [];
+}
+
+function spawnInterval() {
+  return SPAWN_INTERVALS[waveIndex] ?? SPAWN_INTERVALS[SPAWN_INTERVALS.length - 1];
 }
 
 function spawnEnemy(type) {
@@ -245,7 +249,7 @@ function updatePlaying(dt) {
     spawnTimer -= dt;
     if (spawnTimer <= 0) {
       spawnEnemy(spawnQueue.shift());
-      spawnTimer = SPAWN_INTERVAL;
+      spawnTimer = spawnInterval();
     }
   }
 

@@ -38,7 +38,7 @@ menu → playing → wave-clear → playing → ... → win
 ### Key Patterns
 
 - **Delta time:** `dt = Math.min((timestamp - lastTime) / 1000, 0.1)` — capped at 100ms to prevent spiral-of-death on tab switch.
-- **Enemy spawning:** `spawnQueue` is shuffled on `startWave`. One enemy spawns every 1.5s; spawn position retries up to 20 times to stay ≥60px from existing enemies.
+- **Enemy spawning:** `spawnQueue` is shuffled on `startWave`. Spawn interval decreases per wave (1.2s / 1.0s / 0.8s) via `SPAWN_INTERVALS[waveIndex]`. Spawn position retries up to 20 times to stay ≥60px from existing enemies.
 - **Collision:** Circle–circle via `Math.hypot`. Player bullets check all enemies; enemy bullets check player only. Dead entities are filtered out after collision resolution each frame.
 - **`startWave()`** clears both `enemies` and `bullets` — bullets mid-flight when a wave ends are discarded.
 - **Enemies remaining counter** (`drawHUD`) = `enemies.length + spawnQueue.length`, so it counts both alive enemies and those not yet spawned.

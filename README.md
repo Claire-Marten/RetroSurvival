@@ -26,11 +26,11 @@ Three enemy types approach from the arena edges and fire back:
 
 ## Waves
 
-| Wave | Grunts | Speeders | Tanks |
-|---|---|---|---|
-| 1 | 4 | 2 | 0 |
-| 2 | 4 | 3 | 2 |
-| 3 | 6 | 4 | 3 |
+| Wave | Grunts | Speeders | Tanks | Total |
+|---|---|---|---|---|
+| 1 | 7 | 4 | 0 | 11 |
+| 2 | 7 | 5 | 4 | 16 |
+| 3 | 10 | 7 | 6 | 23 |
 
 Enemies spawn one at a time every 1.5 seconds. Clear all enemies in wave 3 to win.
 

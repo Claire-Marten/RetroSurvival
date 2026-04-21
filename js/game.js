@@ -70,6 +70,91 @@ function drawBackground() {
   }
 }
 
+function drawHeart(x, y, filled) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.beginPath();
+  ctx.moveTo(7, 12);
+  ctx.bezierCurveTo(7, 10, 0, 7, 0, 4);
+  ctx.bezierCurveTo(0, 0, 7, 0, 7, 4);
+  ctx.bezierCurveTo(7, 0, 14, 0, 14, 4);
+  ctx.bezierCurveTo(14, 7, 7, 10, 7, 12);
+  ctx.fillStyle = filled ? '#e94560' : '#2a2a4a';
+  if (filled) { ctx.shadowColor = '#e94560'; ctx.shadowBlur = 8; }
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawCrosshair() {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(233,69,96,0.6)';
+  ctx.lineWidth = 1;
+  const r = 8;
+  ctx.beginPath();
+  ctx.arc(mouseX, mouseY, r, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(mouseX - r - 4, mouseY); ctx.lineTo(mouseX + r + 4, mouseY);
+  ctx.moveTo(mouseX, mouseY - r - 4); ctx.lineTo(mouseX, mouseY + r + 4);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawHUD() {
+  ctx.save();
+  ctx.shadowBlur = 0;
+
+  // Health — top left
+  ctx.font = '10px monospace';
+  ctx.fillStyle = '#555';
+  ctx.textAlign = 'left';
+  ctx.fillText('HEALTH', 14, 18);
+  for (let i = 0; i < player.maxHp; i++) drawHeart(14 + i * 22, 24, i < player.hp);
+
+  // Wave counter — top centre
+  ctx.textAlign = 'center';
+  ctx.font = '10px monospace';
+  ctx.fillStyle = '#555';
+  ctx.fillText('WAVE', W / 2, 18);
+  ctx.font = 'bold 26px monospace';
+  ctx.fillStyle = '#e94560';
+  ctx.shadowColor = '#e94560';
+  ctx.shadowBlur = 12;
+  ctx.fillText(`${waveIndex + 1} / ${WAVES.length}`, W / 2, 46);
+  ctx.shadowBlur = 0;
+
+  // Enemies remaining — top right (alive + not yet spawned)
+  ctx.textAlign = 'right';
+  ctx.font = '10px monospace';
+  ctx.fillStyle = '#555';
+  ctx.fillText('ENEMIES', W - 14, 18);
+  ctx.font = 'bold 22px monospace';
+  ctx.fillStyle = '#ff6b35';
+  ctx.shadowColor = '#ff6b35';
+  ctx.shadowBlur = 8;
+  ctx.fillText(String(enemies.length + spawnQueue.length), W - 14, 42);
+  ctx.shadowBlur = 0;
+
+  ctx.restore();
+}
+
+function drawOverlay(title, subs) {
+  ctx.save();
+  ctx.fillStyle = 'rgba(10,10,26,0.85)';
+  ctx.fillRect(0, 0, W, H);
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 56px monospace';
+  ctx.fillStyle = '#e94560';
+  ctx.shadowColor = '#e94560';
+  ctx.shadowBlur = 20;
+  ctx.fillText(title, W / 2, H / 2 - 30);
+  ctx.shadowBlur = 0;
+  ctx.font = '18px monospace';
+  ctx.fillStyle = '#aaa';
+  subs.forEach((line, i) => ctx.fillText(line, W / 2, H / 2 + 20 + i * 32));
+  ctx.restore();
+}
+
 function draw() {
   drawBackground();
 
@@ -96,6 +181,29 @@ function draw() {
   for (const b of bullets) b.draw(ctx);
   for (const e of enemies) if (!e.dead) e.draw(ctx);
   player.draw(ctx);
+  drawHUD();
+  drawCrosshair();
+
+  if (state === 'wave-clear') {
+    ctx.save();
+    ctx.fillStyle = 'rgba(10,10,26,0.75)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.textAlign = 'center';
+    const msg = waveClearPhase === 'complete'
+      ? `WAVE ${waveIndex + 1} COMPLETE`
+      : `WAVE ${waveIndex + 2} INCOMING...`;
+    const color = waveClearPhase === 'complete' ? '#ffd166' : '#e94560';
+    ctx.font = 'bold 44px monospace';
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 18;
+    ctx.fillText(msg, W / 2, H / 2);
+    ctx.restore();
+  } else if (state === 'game-over') {
+    drawOverlay('GAME OVER', ['Click to Restart']);
+  } else if (state === 'win') {
+    drawOverlay('YOU SURVIVED', ['All 3 Waves Cleared', 'Click to Play Again']);
+  }
 }
 
 function checkCollisions() {

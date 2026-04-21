@@ -22,7 +22,7 @@ canvas.addEventListener('mousemove', e => {
 
 // Game state
 let state = 'menu';
-let player, enemies, bullets;
+let player, enemies, bullets, particles;
 let waveIndex = 0;
 let spawnQueue = [];
 let spawnTimer = 0;
@@ -33,6 +33,7 @@ function initGame() {
   player = new Player(W / 2, H / 2);
   enemies = [];
   bullets = [];
+  particles = [];
   waveIndex = 0;
   startWave(0);
 }
@@ -42,6 +43,12 @@ function startWave(index) {
   spawnTimer = 0;
   enemies = [];
   bullets = [];
+  particles = [];
+}
+
+function spawnParticles(x, y, color) {
+  const count = 6;
+  for (let i = 0; i < count; i++) particles.push(new Particle(x, y, color));
 }
 
 function spawnInterval() {
@@ -182,6 +189,7 @@ function draw() {
     return;
   }
 
+  for (const p of particles) p.draw(ctx);
   for (const b of bullets) b.draw(ctx);
   for (const e of enemies) if (!e.dead) e.draw(ctx);
   player.draw(ctx);
@@ -218,6 +226,7 @@ function checkCollisions() {
         if (enemy.dead) continue;
         if (Math.hypot(enemy.x - bullet.x, enemy.y - bullet.y) < enemy.radius + bullet.radius) {
           enemy.takeDamage();
+          if (enemy.dead) spawnParticles(enemy.x, enemy.y, enemy.color);
           bullet.dead = true;
           break;
         }
@@ -269,6 +278,8 @@ function updatePlaying(dt) {
 
   enemies = enemies.filter(e => !e.dead);
   bullets = bullets.filter(b => !b.dead);
+  for (const p of particles) p.update(dt);
+  particles = particles.filter(p => !p.dead);
 
   if (player.hp <= 0) { state = 'game-over'; return; }
 

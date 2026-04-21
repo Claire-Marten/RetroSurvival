@@ -91,6 +91,41 @@ class Bullet {
   }
 }
 
+class Particle {
+  constructor(x, y, color) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 75 + Math.random() * 125;
+    this.x = x;
+    this.y = y;
+    this.vx = Math.cos(angle) * speed;
+    this.vy = Math.sin(angle) * speed;
+    this.color = color;
+    this.radius = 1.5 + Math.random() * 1.5;
+    this.life = 1;
+    this.decay = 1.67 + Math.random() * 1.0;
+    this.dead = false;
+  }
+
+  update(dt) {
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
+    this.life -= this.decay * dt;
+    if (this.life <= 0) this.dead = true;
+  }
+
+  draw(ctx) {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, this.life);
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 6;
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius * this.life, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
 const ENEMY_TYPES = {
   grunt:   { radius: 12, hp: 1, speed: 90,  fireRate: 2.0, color: '#ff6b35', pattern: 'single', bulletSpeed: 200 },
   speeder: { radius: 14, hp: 1, speed: 160, fireRate: 0.6, color: '#ffd166', pattern: 'single', bulletSpeed: 350 },

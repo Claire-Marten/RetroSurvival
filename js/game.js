@@ -7,6 +7,7 @@ const WAVE_CLEAR_DURATION = 2.0;
 const keys = {};
 let mouseX = W / 2;
 let mouseY = H / 2;
+let pendingShot = false;
 
 document.addEventListener('keydown', e => {
   keys[e.key] = true;
@@ -21,6 +22,27 @@ canvas.addEventListener('mousemove', e => {
 
 // Game state
 let state = 'menu';
+let player, enemies, bullets;
+let waveIndex = 0;
+let spawnQueue = [];
+let spawnTimer = 0;
+let waveClearTimer = 0;
+let waveClearPhase = 'complete';
+
+function initGame() {
+  player = new Player(W / 2, H / 2);
+  enemies = [];
+  bullets = [];
+  waveIndex = 0;
+  startWave(0);
+}
+
+function startWave(index) {
+  spawnQueue = [...WAVES[index]].sort(() => Math.random() - 0.5);
+  spawnTimer = 0;
+  enemies = [];
+  bullets = [];
+}
 
 function drawBackground() {
   ctx.fillStyle = '#16213e';
@@ -55,18 +77,37 @@ function draw() {
     ctx.globalAlpha = 0.6 + 0.4 * Math.sin(Date.now() / 500);
     ctx.fillText('CLICK TO PLAY', W / 2, H / 2 + 46);
     ctx.restore();
+    return;
   }
+
+  for (const b of bullets) b.draw(ctx);
+  player.draw(ctx);
 }
 
 function update(dt) {
-  // gameplay update added in later tasks
+  if (state === 'playing') updatePlaying(dt);
+}
+
+function updatePlaying(dt) {
+  if (pendingShot) {
+    const b = player.shoot(mouseX, mouseY);
+    if (b) bullets.push(b);
+    pendingShot = false;
+  }
+
+  player.update(dt, keys, mouseX, mouseY);
+
+  for (const bullet of bullets) {
+    bullet.update(dt);
+    if (bullet.isOutOfBounds()) bullet.dead = true;
+  }
+  bullets = bullets.filter(b => !b.dead);
 }
 
 canvas.addEventListener('click', () => {
-  if (state === 'menu') {
-    // initGame() added in Task 4
-    state = 'playing';
-  }
+  if (state === 'menu')                         { initGame(); state = 'playing'; return; }
+  if (state === 'game-over' || state === 'win') { initGame(); state = 'playing'; return; }
+  if (state === 'playing') pendingShot = true;
 });
 
 let lastTime = 0;

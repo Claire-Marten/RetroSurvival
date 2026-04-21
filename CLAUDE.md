@@ -43,6 +43,20 @@ menu → playing → wave-clear → playing → ... → win
 - **`startWave()`** clears both `enemies` and `bullets` — bullets mid-flight when a wave ends are discarded.
 - **Enemies remaining counter** (`drawHUD`) = `enemies.length + spawnQueue.length`, so it counts both alive enemies and those not yet spawned.
 
+## Commit Messages
+
+Follow the Conventional Commits format: a short subject line prefixed with a type (`feat:`, `fix:`, `docs:`, etc.), then a blank line, then a body that explains *why* the change was made and *by how much* where relevant.
+
+```
+feat: increase wave difficulty by ~75% for V1.1
+
+Raised enemy counts per wave (6→11, 9→16, 13→23) and introduced
+per-wave spawn intervals that tighten each round (1.2s / 1.0s / 0.8s),
+so later waves feel progressively more swarming.
+```
+
+The body is required whenever someone would need to open a file to understand the intent behind the change.
+
 ## Design Docs
 
 - Spec: `docs/superpowers/specs/2026-04-21-top-down-shooter-design.md`

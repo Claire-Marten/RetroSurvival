@@ -98,6 +98,26 @@ function draw() {
   player.draw(ctx);
 }
 
+function checkCollisions() {
+  for (const bullet of bullets) {
+    if (bullet.dead) continue;
+    if (bullet.owner === 'player') {
+      for (const enemy of enemies) {
+        if (enemy.dead) continue;
+        if (Math.hypot(enemy.x - bullet.x, enemy.y - bullet.y) < enemy.radius + bullet.radius) {
+          enemy.takeDamage();
+          bullet.dead = true;
+          break;
+        }
+      }
+    } else {
+      if (Math.hypot(player.x - bullet.x, player.y - bullet.y) < player.radius + bullet.radius) {
+        if (player.takeDamage()) bullet.dead = true;
+      }
+    }
+  }
+}
+
 function update(dt) {
   if (state === 'playing') updatePlaying(dt);
 }
@@ -132,6 +152,8 @@ function updatePlaying(dt) {
     bullet.update(dt);
     if (bullet.isOutOfBounds()) bullet.dead = true;
   }
+  checkCollisions();
+
   enemies = enemies.filter(e => !e.dead);
   bullets = bullets.filter(b => !b.dead);
 }

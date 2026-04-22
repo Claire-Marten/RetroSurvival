@@ -9,6 +9,8 @@ let mouseY = H / 2;
 let pendingShot = false;
 
 document.addEventListener('keydown', e => {
+  if (state === 'enter-initials') { handleInitialsKey(e.key); e.preventDefault(); return; }
+  if (state === 'game-over' && e.key === ' ') { initAudio(); initGame(); state = 'playing'; return; }
   keys[e.key] = true;
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
 });
@@ -30,6 +32,8 @@ let waveClearPhase = 'complete';
 let powerup = null;
 let powerupSpawnTimer = 0;
 let tripleShotTimer = 0;
+let initialsEntry = ['A', 'A', 'A'];
+let initialsSlot = 0;
 
 function initGame() {
   player = new Player(W / 2, H / 2);
@@ -49,6 +53,21 @@ function startWave(index) {
   particles = [];
   powerup = null;
   powerupSpawnTimer = WAVES[index].powerupTime;
+}
+
+function handleInitialsKey(key) {
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const idx = letters.indexOf(initialsEntry[initialsSlot]);
+  if (key === 'ArrowUp')   initialsEntry[initialsSlot] = letters[(idx + 1) % 26];
+  if (key === 'ArrowDown') initialsEntry[initialsSlot] = letters[(idx + 25) % 26];
+  if (key === 'ArrowRight' || key === 'Enter') {
+    if (initialsSlot < 2) {
+      initialsSlot++;
+    } else {
+      saveScore(initialsEntry, score);
+      state = 'win';
+    }
+  }
 }
 
 function spawnParticles(x, y, color) {
@@ -188,6 +207,72 @@ function drawHUD() {
   ctx.restore();
 }
 
+function drawLeaderboard(centreX, startY) {
+  const scores = loadScores();
+  const entries = [...scores, ...Array(MAX_SCORES).fill(null)].slice(0, MAX_SCORES);
+  ctx.textAlign = 'center';
+  ctx.font = '10px monospace';
+  ctx.fillStyle = '#555';
+  ctx.fillText('HIGH SCORES', centreX, startY);
+  entries.forEach((entry, i) => {
+    const y = startY + 26 + i * 26;
+    ctx.font = i === 0 ? 'bold 14px monospace' : '13px monospace';
+    ctx.fillStyle = i === 0 ? '#ffd166' : '#aaa';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${i + 1}.`, centreX - 110, y);
+    ctx.fillText(entry ? entry.initials : '---', centreX - 80, y);
+    ctx.textAlign = 'right';
+    ctx.fillText(entry ? String(entry.score).padStart(6, '0') : '------', centreX + 110, y);
+  });
+}
+
+function drawInitialsEntry() {
+  drawBackground();
+  ctx.save();
+  ctx.textAlign = 'center';
+
+  ctx.font = 'bold 36px monospace';
+  ctx.fillStyle = '#ffd166';
+  ctx.shadowColor = '#ffd166';
+  ctx.shadowBlur = 16;
+  ctx.fillText('NEW HIGH SCORE', W / 2, 120);
+  ctx.shadowBlur = 0;
+
+  ctx.font = 'bold 24px monospace';
+  ctx.fillStyle = '#e94560';
+  ctx.shadowColor = '#e94560';
+  ctx.shadowBlur = 10;
+  ctx.fillText(String(score).padStart(6, '0'), W / 2, 162);
+  ctx.shadowBlur = 0;
+
+  ctx.font = '11px monospace';
+  ctx.fillStyle = '#555';
+  ctx.fillText('↑ ↓  CHANGE     →  NEXT', W / 2, 196);
+
+  const slotW = 52, slotH = 60, gap = 18;
+  const totalW = 3 * slotW + 2 * gap;
+  const startX = W / 2 - totalW / 2;
+  const slotY = 220;
+
+  for (let i = 0; i < 3; i++) {
+    const x = startX + i * (slotW + gap);
+    const active = i === initialsSlot;
+    const pulse = active ? 0.5 + 0.5 * Math.sin(Date.now() / 180) : 0;
+    ctx.strokeStyle = active ? '#e94560' : '#30363d';
+    ctx.lineWidth = 2;
+    if (active) { ctx.shadowColor = '#e94560'; ctx.shadowBlur = 8 + pulse * 10; }
+    ctx.strokeRect(x, slotY, slotW, slotH);
+    ctx.shadowBlur = 0;
+    ctx.font = 'bold 38px monospace';
+    ctx.fillStyle = active ? '#e94560' : '#666';
+    ctx.textAlign = 'center';
+    ctx.fillText(initialsEntry[i], x + slotW / 2, slotY + slotH - 10);
+  }
+
+  drawLeaderboard(W / 2, 340);
+  ctx.restore();
+}
+
 function drawOverlay(title, subs) {
   ctx.save();
   ctx.fillStyle = 'rgba(10,10,26,0.85)';
@@ -208,6 +293,8 @@ function drawOverlay(title, subs) {
 function draw() {
   drawBackground();
 
+  if (state === 'enter-initials') { drawInitialsEntry(); return; }
+
   if (state === 'menu') {
     ctx.save();
     ctx.textAlign = 'center';
@@ -215,16 +302,18 @@ function draw() {
     ctx.fillStyle = '#e94560';
     ctx.shadowColor = '#e94560';
     ctx.shadowBlur = 24;
-    ctx.fillText('SURVIVE', W / 2, H / 2 - 60);
+    ctx.fillText('SURVIVE', W / 2, 100);
     ctx.shadowBlur = 0;
     ctx.font = '16px monospace';
     ctx.fillStyle = '#aaa';
-    ctx.fillText('3 WAVES · 3 LIVES · NO MERCY', W / 2, H / 2 - 10);
+    ctx.fillText('3 WAVES · 3 LIVES · NO MERCY', W / 2, 148);
     ctx.font = '14px monospace';
     ctx.fillStyle = '#e94560';
     ctx.globalAlpha = 0.6 + 0.4 * Math.sin(Date.now() / 500);
-    ctx.fillText('CLICK TO PLAY', W / 2, H / 2 + 46);
+    ctx.fillText('CLICK TO PLAY', W / 2, 188);
+    ctx.globalAlpha = 1;
     ctx.restore();
+    drawLeaderboard(W / 2, 230);
     return;
   }
 
@@ -252,9 +341,11 @@ function draw() {
     ctx.fillText(msg, W / 2, H / 2);
     ctx.restore();
   } else if (state === 'game-over') {
-    drawOverlay('GAME OVER', ['Click to Restart']);
+    drawOverlay('GAME OVER', ['Space to Restart']);
+    drawLeaderboard(W / 2, H / 2 + 50);
   } else if (state === 'win') {
-    drawOverlay('YOU SURVIVED', [`Score: ${String(score).padStart(6, '0')}`, 'All 3 Waves Cleared', 'Click to Play Again']);
+    drawOverlay('YOU SURVIVED', ['Click to Play Again']);
+    drawLeaderboard(W / 2, H / 2 + 50);
   }
 }
 
@@ -353,7 +444,13 @@ function updatePlaying(dt) {
     bullets = [];
     powerup = null;
     if (waveIndex === WAVES.length - 1) {
-      state = 'win';
+      if (isHighScore(score)) {
+        initialsEntry = ['A', 'A', 'A'];
+        initialsSlot = 0;
+        state = 'enter-initials';
+      } else {
+        state = 'win';
+      }
     } else {
       state = 'wave-clear';
       waveClearTimer = WAVE_CLEAR_DURATION;
@@ -377,8 +474,8 @@ function updateWaveClear(dt) {
 }
 
 canvas.addEventListener('click', () => {
-  if (state === 'menu')                         { initAudio(); initGame(); state = 'playing'; return; }
-  if (state === 'game-over' || state === 'win') { initAudio(); initGame(); state = 'playing'; return; }
+  if (state === 'menu') { initAudio(); initGame(); state = 'playing'; return; }
+  if (state === 'win')  { initAudio(); initGame(); state = 'playing'; return; }
   if (state === 'playing') pendingShot = true;
 });
 

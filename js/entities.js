@@ -25,11 +25,14 @@ class Player {
     this.invincibleTimer = Math.max(0, this.invincibleTimer - dt);
   }
 
-  shoot(mouseX, mouseY) {
+  shoot(mouseX, mouseY, tripleShot = false) {
     if (this.shootCooldown > 0) return null;
     this.shootCooldown = 0.2;
     const angle = Math.atan2(mouseY - this.y, mouseX - this.x);
-    return new Bullet(this.x, this.y, angle, 500, '#e94560', 4, 'player');
+    if (!tripleShot) return [new Bullet(this.x, this.y, angle, 500, '#e94560', 4, 'player')];
+    return [-0.05, 0, 0.05].map(offset =>
+      new Bullet(this.x, this.y, angle + offset, 500, '#e94560', 4, 'player')
+    );
   }
 
   takeDamage() {
@@ -122,6 +125,40 @@ class Particle {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius * this.life, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
+  }
+}
+
+class Powerup {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.radius = 12;
+    this.timer = 5;
+    this.dead = false;
+  }
+
+  update(dt) {
+    this.timer -= dt;
+    if (this.timer <= 0) this.dead = true;
+  }
+
+  draw(ctx) {
+    const pulse = Math.sin(Date.now() / (this.timer > 2 ? 300 : 80)) * 0.5 + 0.5;
+    ctx.save();
+    ctx.shadowColor = '#a78bfa';
+    ctx.shadowBlur = 10 + pulse * 20;
+    ctx.strokeStyle = `rgba(167,139,250,${0.5 + pulse * 0.5})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius + pulse * 4, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = '#a78bfa';
+    ctx.shadowBlur = 8;
+    ctx.font = 'bold 14px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('3', this.x, this.y);
     ctx.restore();
   }
 }

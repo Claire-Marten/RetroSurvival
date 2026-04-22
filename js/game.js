@@ -28,6 +28,9 @@ let spawnQueue = [];
 let spawnTimer = 0;
 let waveClearTimer = 0;
 let waveClearPhase = 'complete';
+let powerup = null;
+let powerupSpawnTimer = 0;
+let tripleShotTimer = 0;
 
 function initGame() {
   player = new Player(W / 2, H / 2);
@@ -45,6 +48,8 @@ function startWave(index) {
   enemies = [];
   bullets = [];
   particles = [];
+  powerup = null;
+  powerupSpawnTimer = index >= 1 ? 5 : -1;
 }
 
 function spawnParticles(x, y, color) {
@@ -147,6 +152,20 @@ function drawHUD() {
   ctx.fillText(String(enemies.length + spawnQueue.length), W - 14, 42);
   ctx.shadowBlur = 0;
 
+  // Triple shot indicator — bottom left
+  if (tripleShotTimer > 0) {
+    ctx.textAlign = 'left';
+    ctx.font = '10px monospace';
+    ctx.fillStyle = '#555';
+    ctx.fillText('POWER', 14, H - 30);
+    ctx.font = 'bold 14px monospace';
+    ctx.fillStyle = '#a78bfa';
+    ctx.shadowColor = '#a78bfa';
+    ctx.shadowBlur = 10;
+    ctx.fillText(`TRIPLE  ${Math.ceil(tripleShotTimer)}s`, 14, H - 12);
+    ctx.shadowBlur = 0;
+  }
+
   // Score — bottom centre
   ctx.textAlign = 'center';
   ctx.font = '10px monospace';
@@ -203,6 +222,7 @@ function draw() {
   }
 
   for (const p of particles) p.draw(ctx);
+  if (powerup) powerup.draw(ctx);
   for (const b of bullets) b.draw(ctx);
   for (const e of enemies) if (!e.dead) e.draw(ctx);
   player.draw(ctx);
@@ -259,8 +279,8 @@ function update(dt) {
 
 function updatePlaying(dt) {
   if (pendingShot) {
-    const b = player.shoot(mouseX, mouseY);
-    if (b) { bullets.push(b); playShoot(); }
+    const bs = player.shoot(mouseX, mouseY, tripleShotTimer > 0);
+    if (bs) { bullets.push(...bs); playShoot(); }
     pendingShot = false;
   }
 
@@ -295,6 +315,30 @@ function updatePlaying(dt) {
   particles = particles.filter(p => !p.dead);
 
   if (player.hp <= 0) { state = 'game-over'; return; }
+
+  // Powerup spawn
+  if (powerupSpawnTimer > 0) {
+    powerupSpawnTimer -= dt;
+    if (powerupSpawnTimer <= 0 && !powerup) {
+      powerup = new Powerup(
+        80 + Math.random() * (W - 160),
+        80 + Math.random() * (H - 160)
+      );
+    }
+  }
+
+  // Powerup update and pickup
+  if (powerup) {
+    powerup.update(dt);
+    if (powerup.dead) {
+      powerup = null;
+    } else if (Math.hypot(player.x - powerup.x, player.y - powerup.y) < player.radius + powerup.radius) {
+      tripleShotTimer = 8;
+      powerup = null;
+    }
+  }
+
+  tripleShotTimer = Math.max(0, tripleShotTimer - dt);
 
   if (spawnQueue.length === 0 && enemies.length === 0) {
     if (waveIndex === WAVES.length - 1) {

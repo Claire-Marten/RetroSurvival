@@ -1,0 +1,68 @@
+<h2>HUD Layout</h2>
+<p class="subtitle">How game info is displayed during play — does this arrangement work for you?</p>
+
+<div class="mockup" style="max-width:580px;margin:0 auto;">
+  <div class="mockup-header">Game Screen (fixed arena)</div>
+  <div class="mockup-body" style="padding:0;background:#16213e;aspect-ratio:4/3;position:relative;overflow:hidden;">
+
+    <!-- background grid -->
+    <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 30px,rgba(255,255,255,0.02) 30px,rgba(255,255,255,0.02) 31px),repeating-linear-gradient(90deg,transparent,transparent 30px,rgba(255,255,255,0.02) 30px,rgba(255,255,255,0.02) 31px);"></div>
+
+    <!-- TOP LEFT: HP hearts -->
+    <div style="position:absolute;top:12px;left:14px;display:flex;flex-direction:column;gap:2px;">
+      <div style="color:#888;font-size:9px;font-family:monospace;letter-spacing:1px;margin-bottom:2px;">HEALTH</div>
+      <div style="display:flex;gap:6px;">
+        <div style="width:14px;height:14px;background:#e94560;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);box-shadow:0 0 6px #e94560;"></div>
+        <div style="width:14px;height:14px;background:#e94560;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);box-shadow:0 0 6px #e94560;"></div>
+        <div style="width:14px;height:14px;background:#333;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);border:1px solid #555;"></div>
+      </div>
+    </div>
+
+    <!-- TOP CENTER: Wave indicator -->
+    <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);text-align:center;">
+      <div style="color:#888;font-size:9px;font-family:monospace;letter-spacing:2px;">WAVE</div>
+      <div style="color:#e94560;font-size:22px;font-family:monospace;font-weight:bold;line-height:1;text-shadow:0 0 10px rgba(233,69,96,0.6);">2 / 3</div>
+    </div>
+
+    <!-- TOP RIGHT: Enemies remaining -->
+    <div style="position:absolute;top:12px;right:14px;text-align:right;">
+      <div style="color:#888;font-size:9px;font-family:monospace;letter-spacing:1px;margin-bottom:2px;">ENEMIES</div>
+      <div style="color:#ff6b35;font-size:18px;font-family:monospace;font-weight:bold;text-shadow:0 0 8px rgba(255,107,53,0.5);">7</div>
+    </div>
+
+    <!-- player in center-bottom area -->
+    <div style="position:absolute;left:50%;top:62%;transform:translate(-50%,-50%);">
+      <div style="width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:20px solid #e94560;filter:drop-shadow(0 0 6px #e94560);"></div>
+    </div>
+
+    <!-- sample enemies -->
+    <div style="position:absolute;left:18%;top:25%;width:12px;height:12px;background:#ff6b35;transform:rotate(45deg);box-shadow:0 0 6px #ff6b35;"></div>
+    <div style="position:absolute;left:70%;top:18%;width:14px;height:14px;background:#ffd166;transform:rotate(45deg);box-shadow:0 0 6px #ffd166;"></div>
+    <div style="position:absolute;left:80%;top:45%;width:22px;height:22px;background:#c9184a;transform:rotate(45deg);box-shadow:0 0 8px #c9184a;"></div>
+    <div style="position:absolute;left:25%;top:40%;width:12px;height:12px;background:#ff6b35;transform:rotate(45deg);box-shadow:0 0 6px #ff6b35;"></div>
+
+    <!-- sample bullets -->
+    <div style="position:absolute;left:52%;top:48%;width:4px;height:14px;background:linear-gradient(to top,#e94560,transparent);border-radius:2px;"></div>
+    <div style="position:absolute;left:22%;top:50%;width:4px;height:10px;background:linear-gradient(to bottom,#ff6b35,transparent);border-radius:2px;transform:rotate(30deg);"></div>
+    <div style="position:absolute;left:72%;top:38%;width:4px;height:10px;background:linear-gradient(to bottom,#ffd166,transparent);border-radius:2px;transform:rotate(-20deg);"></div>
+
+    <!-- bottom: subtle crosshair indicator at mouse pos -->
+    <div style="position:absolute;left:35%;top:30%;width:16px;height:16px;border:1px solid rgba(233,69,96,0.5);border-radius:50%;transform:translate(-50%,-50%);">
+      <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(233,69,96,0.4);transform:translateY(-50%);"></div>
+      <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(233,69,96,0.4);transform:translateX(-50%);"></div>
+    </div>
+
+    <!-- arena border glow -->
+    <div style="position:absolute;inset:0;border:2px solid rgba(233,69,96,0.15);pointer-events:none;box-shadow:inset 0 0 30px rgba(233,69,96,0.05);"></div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:20px;">
+  <h3>HUD Elements</h3>
+  <ul style="color:#ccc;line-height:1.8;">
+    <li><strong style="color:#e94560;">Top-left:</strong> 3 heart icons — filled = HP remaining, empty = lost</li>
+    <li><strong style="color:#e94560;">Top-center:</strong> Wave counter (e.g. "2 / 3")</li>
+    <li><strong style="color:#e94560;">Top-right:</strong> Enemies remaining in current wave</li>
+    <li><strong style="color:#e94560;">Cursor:</strong> Subtle crosshair follows the mouse</li>
+  </ul>
+</div>

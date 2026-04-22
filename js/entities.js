@@ -127,9 +127,9 @@ class Particle {
 }
 
 const ENEMY_TYPES = {
-  grunt:   { radius: 12, hp: 1, speed: 90,  fireRate: 2.0, color: '#ff6b35', pattern: 'single', bulletSpeed: 200 },
-  speeder: { radius: 14, hp: 1, speed: 160, fireRate: 0.6, color: '#ffd166', pattern: 'single', bulletSpeed: 350 },
-  tank:    { radius: 22, hp: 3, speed: 55,  fireRate: 1.5, color: '#c9184a', pattern: 'spread', bulletSpeed: 150 },
+  grunt:   { radius: 12, hp: 1, speed: 90,  fireRate: 2.0, color: '#ff6b35', pattern: 'single', bulletSpeed: 200, score: 100 },
+  speeder: { radius: 14, hp: 1, speed: 160, fireRate: 0.6, color: '#ffd166', pattern: 'single', bulletSpeed: 350, score: 150 },
+  tank:    { radius: 22, hp: 3, speed: 55,  fireRate: 1.5, color: '#c9184a', pattern: 'spread', bulletSpeed: 150, score: 300 },
 };
 
 class Enemy {
@@ -146,6 +146,7 @@ class Enemy {
     this.color = cfg.color;
     this.pattern = cfg.pattern;
     this.bulletSpeed = cfg.bulletSpeed;
+    this.scoreValue = cfg.score;
     this.fireTimer = Math.random() * cfg.fireRate;
     this.spinAngle = 0;
     this.spinSpeed = (Math.random() * 1.5 + 0.5) * (Math.random() < 0.5 ? 1 : -1);

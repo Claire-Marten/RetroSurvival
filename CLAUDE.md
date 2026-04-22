@@ -23,6 +23,8 @@ This order is load-order critical. `waves.js` declares the globals `W` (800) and
 - `Bullet` — vx/vy from angle+speed, `owner` is `'player'` or `'enemy'`, `dead` flag for deferred removal.
 - `Enemy` — configured via `ENEMY_TYPES` lookup at construction. Spinning diamond render. `tryShoot()` returns a `Bullet[]` (empty if on cooldown). Tank uses spread pattern (±0.35 rad). HP pips rendered for multi-HP enemies.
 
+**`js/audio.js`** — All audio. Procedural SFX via Web Audio API (`playShoot`, `playPlayerHit`, `playEnemyDeath`). Background music via HTML5 Audio (`audio/Orbital Colossus.mp3`, loops at 0.35 volume). `initAudio()` must be called on a user gesture (the click-to-play handler) to satisfy browser autoplay policy.
+
 **`js/game.js`** — Everything else: input handling, game loop, state machine, spawn queue, collision detection, and all canvas rendering.
 
 ### State Machine

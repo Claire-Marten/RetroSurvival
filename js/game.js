@@ -1,6 +1,5 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const SPAWN_INTERVALS = [1.2, 1.0, 0.8];
 const WAVE_CLEAR_DURATION = 2.0;
 
 // Input
@@ -24,7 +23,7 @@ canvas.addEventListener('mousemove', e => {
 let state = 'menu';
 let player, enemies, bullets, particles, score;
 let waveIndex = 0;
-let spawnQueue = [];
+let waveTimer = 0;
 let spawnTimer = 0;
 let waveClearTimer = 0;
 let waveClearPhase = 'complete';
@@ -43,13 +42,13 @@ function initGame() {
 }
 
 function startWave(index) {
-  spawnQueue = [...WAVES[index]].sort(() => Math.random() - 0.5);
+  waveTimer = WAVE_DURATION;
   spawnTimer = 0;
   enemies = [];
   bullets = [];
   particles = [];
   powerup = null;
-  powerupSpawnTimer = index >= 1 ? 5 : -1;
+  powerupSpawnTimer = WAVES[index].powerupTime;
 }
 
 function spawnParticles(x, y, color) {
@@ -57,8 +56,14 @@ function spawnParticles(x, y, color) {
   for (let i = 0; i < count; i++) particles.push(new Particle(x, y, color));
 }
 
-function spawnInterval() {
-  return SPAWN_INTERVALS[waveIndex] ?? SPAWN_INTERVALS[SPAWN_INTERVALS.length - 1];
+function randomEnemyType() {
+  const weights = WAVES[waveIndex].weights;
+  const total = Object.values(weights).reduce((a, b) => a + b, 0);
+  let roll = Math.random() * total;
+  for (const [type, weight] of Object.entries(weights)) {
+    roll -= weight;
+    if (roll <= 0) return type;
+  }
 }
 
 function spawnEnemy(type) {
@@ -140,16 +145,18 @@ function drawHUD() {
   ctx.fillText(`${waveIndex + 1} / ${WAVES.length}`, W / 2, 46);
   ctx.shadowBlur = 0;
 
-  // Enemies remaining — top right (alive + not yet spawned)
+  // Wave timer — top right
+  const timeLeft = Math.ceil(waveTimer);
+  const timerColor = timeLeft <= 5 ? '#ffd166' : '#aaa';
   ctx.textAlign = 'right';
   ctx.font = '10px monospace';
   ctx.fillStyle = '#555';
-  ctx.fillText('ENEMIES', W - 14, 18);
-  ctx.font = 'bold 22px monospace';
-  ctx.fillStyle = '#ff6b35';
-  ctx.shadowColor = '#ff6b35';
-  ctx.shadowBlur = 8;
-  ctx.fillText(String(enemies.length + spawnQueue.length), W - 14, 42);
+  ctx.fillText('TIME', W - 14, 18);
+  ctx.font = 'bold 26px monospace';
+  ctx.fillStyle = timerColor;
+  ctx.shadowColor = timerColor;
+  ctx.shadowBlur = timeLeft <= 5 ? 12 : 0;
+  ctx.fillText(`${timeLeft}s`, W - 14, 46);
   ctx.shadowBlur = 0;
 
   // Triple shot indicator — bottom left
@@ -286,13 +293,14 @@ function updatePlaying(dt) {
 
   player.update(dt, keys, mouseX, mouseY);
 
-  // Spawn next enemy from queue
-  if (spawnQueue.length > 0) {
-    spawnTimer -= dt;
-    if (spawnTimer <= 0) {
-      spawnEnemy(spawnQueue.shift());
-      spawnTimer = spawnInterval();
-    }
+  // Wave countdown
+  waveTimer -= dt;
+
+  // Continuous enemy spawning
+  spawnTimer -= dt;
+  if (spawnTimer <= 0 && waveTimer > 0) {
+    spawnEnemy(randomEnemyType());
+    spawnTimer = WAVES[waveIndex].spawnRate;
   }
 
   // Move enemies and collect their bullets
@@ -340,7 +348,10 @@ function updatePlaying(dt) {
 
   tripleShotTimer = Math.max(0, tripleShotTimer - dt);
 
-  if (spawnQueue.length === 0 && enemies.length === 0) {
+  if (waveTimer <= 0) {
+    enemies = [];
+    bullets = [];
+    powerup = null;
     if (waveIndex === WAVES.length - 1) {
       state = 'win';
     } else {

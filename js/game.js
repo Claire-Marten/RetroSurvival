@@ -239,14 +239,14 @@ function checkCollisions() {
         if (enemy.dead) continue;
         if (Math.hypot(enemy.x - bullet.x, enemy.y - bullet.y) < enemy.radius + bullet.radius) {
           enemy.takeDamage();
-          if (enemy.dead) { score += enemy.scoreValue; spawnParticles(enemy.x, enemy.y, enemy.color); }
+          if (enemy.dead) { score += enemy.scoreValue; spawnParticles(enemy.x, enemy.y, enemy.color); playEnemyDeath(); }
           bullet.dead = true;
           break;
         }
       }
     } else {
       if (Math.hypot(player.x - bullet.x, player.y - bullet.y) < player.radius + bullet.radius) {
-        if (player.takeDamage()) bullet.dead = true;
+        if (player.takeDamage()) { bullet.dead = true; playPlayerHit(); }
       }
     }
   }
@@ -260,7 +260,7 @@ function update(dt) {
 function updatePlaying(dt) {
   if (pendingShot) {
     const b = player.shoot(mouseX, mouseY);
-    if (b) bullets.push(b);
+    if (b) { bullets.push(b); playShoot(); }
     pendingShot = false;
   }
 
@@ -322,8 +322,8 @@ function updateWaveClear(dt) {
 }
 
 canvas.addEventListener('click', () => {
-  if (state === 'menu')                         { initGame(); state = 'playing'; return; }
-  if (state === 'game-over' || state === 'win') { initGame(); state = 'playing'; return; }
+  if (state === 'menu')                         { initAudio(); initGame(); state = 'playing'; return; }
+  if (state === 'game-over' || state === 'win') { initAudio(); initGame(); state = 'playing'; return; }
   if (state === 'playing') pendingShot = true;
 });
 

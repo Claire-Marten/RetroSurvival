@@ -16,7 +16,7 @@ This order is load-order critical. `waves.js` declares the globals `W` (800) and
 
 ## Architecture
 
-**`js/waves.js`** — Arena dimensions and wave data only. Exports globals `W`, `H`, and `WAVES` (array of 3 enemy-type string arrays). No logic.
+**`js/waves.js`** — Arena dimensions, wave duration, and wave data only. Exports globals `W`, `H`, `WAVE_DURATION` (20s), and `WAVES` (array of 3 objects, each with `spawnRate`, `powerupTime`, and `weights` — a `{grunt, speeder, tank}` percentage map used for weighted random spawning). No logic.
 
 **`js/entities.js`** — Three classes with no DOM/canvas access:
 - `Player` — movement (arrow keys, diagonal-normalised at ×0.707), mouse-aim (atan2), shoot cooldown (200ms), 3 HP, invincibility frames (600ms) after hit. `takeDamage()` returns `false` during invincibility so the bullet is not consumed.
@@ -40,7 +40,8 @@ menu → playing → wave-clear → playing → ... → win
 ### Key Patterns
 
 - **Delta time:** `dt = Math.min((timestamp - lastTime) / 1000, 0.1)` — capped at 100ms to prevent spiral-of-death on tab switch.
-- **Enemy spawning:** `spawnQueue` is shuffled on `startWave`. Spawn interval decreases per wave (1.2s / 1.0s / 0.8s) via `SPAWN_INTERVALS[waveIndex]`. Spawn position retries up to 20 times to stay ≥60px from existing enemies.
+- **Enemy spawning:** Continuous throughout each wave. `randomEnemyType()` picks a type using weighted random from `WAVES[waveIndex].weights`. Spawn interval is `WAVES[waveIndex].spawnRate` (2.0s / 1.3s / 0.8s). Spawn position retries up to 20 times to stay ≥60px from existing enemies.
+- **Wave timer:** Each wave runs for `WAVE_DURATION` (20s). When `waveTimer` hits 0, all enemies and bullets are cleared instantly and the wave-clear sequence begins.
 - **Collision:** Circle–circle via `Math.hypot`. Player bullets check all enemies; enemy bullets check player only. Dead entities are filtered out after collision resolution each frame.
 - **`startWave()`** clears both `enemies` and `bullets` — bullets mid-flight when a wave ends are discarded.
 - **Enemies remaining counter** (`drawHUD`) = `enemies.length + spawnQueue.length`, so it counts both alive enemies and those not yet spawned.

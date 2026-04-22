@@ -22,7 +22,7 @@ canvas.addEventListener('mousemove', e => {
 
 // Game state
 let state = 'menu';
-let player, enemies, bullets, particles;
+let player, enemies, bullets, particles, score;
 let waveIndex = 0;
 let spawnQueue = [];
 let spawnTimer = 0;
@@ -34,6 +34,7 @@ function initGame() {
   enemies = [];
   bullets = [];
   particles = [];
+  score = 0;
   waveIndex = 0;
   startWave(0);
 }
@@ -146,6 +147,18 @@ function drawHUD() {
   ctx.fillText(String(enemies.length + spawnQueue.length), W - 14, 42);
   ctx.shadowBlur = 0;
 
+  // Score — bottom centre
+  ctx.textAlign = 'center';
+  ctx.font = '10px monospace';
+  ctx.fillStyle = '#555';
+  ctx.fillText('SCORE', W / 2, H - 30);
+  ctx.font = 'bold 20px monospace';
+  ctx.fillStyle = '#e94560';
+  ctx.shadowColor = '#e94560';
+  ctx.shadowBlur = 10;
+  ctx.fillText(String(score).padStart(6, '0'), W / 2, H - 12);
+  ctx.shadowBlur = 0;
+
   ctx.restore();
 }
 
@@ -214,7 +227,7 @@ function draw() {
   } else if (state === 'game-over') {
     drawOverlay('GAME OVER', ['Click to Restart']);
   } else if (state === 'win') {
-    drawOverlay('YOU SURVIVED', ['All 3 Waves Cleared', 'Click to Play Again']);
+    drawOverlay('YOU SURVIVED', [`Score: ${String(score).padStart(6, '0')}`, 'All 3 Waves Cleared', 'Click to Play Again']);
   }
 }
 
@@ -226,7 +239,7 @@ function checkCollisions() {
         if (enemy.dead) continue;
         if (Math.hypot(enemy.x - bullet.x, enemy.y - bullet.y) < enemy.radius + bullet.radius) {
           enemy.takeDamage();
-          if (enemy.dead) spawnParticles(enemy.x, enemy.y, enemy.color);
+          if (enemy.dead) { score += enemy.scoreValue; spawnParticles(enemy.x, enemy.y, enemy.color); }
           bullet.dead = true;
           break;
         }

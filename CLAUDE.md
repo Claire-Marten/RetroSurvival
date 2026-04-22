@@ -43,6 +43,23 @@ menu → playing → wave-clear → playing → ... → win
 - **`startWave()`** clears both `enemies` and `bullets` — bullets mid-flight when a wave ends are discarded.
 - **Enemies remaining counter** (`drawHUD`) = `enemies.length + spawnQueue.length`, so it counts both alive enemies and those not yet spawned.
 
+## Git Workflow
+
+Always use a feature branch for every change, no matter how small. Never commit directly to `master`.
+
+```bash
+git checkout -b feature/your-feature-name  # create and switch to branch
+# make changes
+git add <files>
+git commit -m "..."
+git push -u origin feature/your-feature-name
+gh pr create ...
+gh pr merge <number> --merge
+git checkout master && git pull
+git push origin --delete feature/your-feature-name
+git branch -d feature/your-feature-name
+```
+
 ## Commit Messages
 
 Follow the Conventional Commits format: a short subject line prefixed with a type (`feat:`, `fix:`, `docs:`, etc.), then a blank line, then a body that explains *why* the change was made and *by how much* where relevant.

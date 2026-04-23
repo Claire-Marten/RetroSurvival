@@ -16,12 +16,13 @@ This order is load-order critical. `waves.js` declares the globals `W` (800) and
 
 ## Architecture
 
-**`js/waves.js`** — Arena dimensions, wave duration, and wave data only. Exports globals `W`, `H`, `WAVE_DURATION` (20s), and `WAVES` (array of 3 objects, each with `spawnRate`, `powerupTime`, and `weights` — a `{grunt, speeder, tank}` percentage map used for weighted random spawning). No logic.
+**`js/waves.js`** — Arena dimensions, wave duration, and wave data only. Exports globals `W`, `H`, `WAVE_DURATION` (20s), and `WAVES` (array of 3 objects, each with `spawnRate`, `powerupTime`, and `weights` — a `{grunt, speeder, tank, sniper}` percentage map used for weighted random spawning). Sniper only appears in wave 3 (8% weight). No logic.
 
-**`js/entities.js`** — Three classes with no DOM/canvas access:
-- `Player` — movement (arrow keys, diagonal-normalised at ×0.707), mouse-aim (atan2), shoot cooldown (200ms), 3 HP, invincibility frames (600ms) after hit. `takeDamage()` returns `false` during invincibility so the bullet is not consumed.
-- `Bullet` — vx/vy from angle+speed, `owner` is `'player'` or `'enemy'`, `dead` flag for deferred removal.
-- `Enemy` — configured via `ENEMY_TYPES` lookup at construction. Spinning diamond render. `tryShoot()` returns a `Bullet[]` (empty if on cooldown). Tank uses spread pattern (±0.35 rad). HP pips rendered for multi-HP enemies.
+**`js/entities.js`** — Four classes with no DOM/canvas access:
+- `Player` — movement (arrow keys, diagonal-normalised at ×0.707), mouse-aim (atan2), shoot cooldown (200ms), 3 HP, invincibility frames (600ms) after hit. Colour is electric blue (`#00d4ff`). `shoot()` accepts a `tripleShot` flag — returns array of 1 or 3 near-parallel bullets. `takeDamage()` returns `false` during invincibility so the bullet is not consumed.
+- `Bullet` — vx/vy from angle+speed, `owner` is `'player'` or `'enemy'`, `dead` flag for deferred removal. Player bullets are 4px radius; sniper bullets are 10px radius.
+- `Enemy` — configured via `ENEMY_TYPES` lookup at construction. Spinning diamond render. `tryShoot()` returns a `Bullet[]`. Tank fires 3-way spread (±0.35 rad) at 75px/s. Sniper has a 4-state machine: `flying-in` (moves toward centre until 100px from any wall) → `waiting` (2s pause) → `cooldown` → `charging` (1.2s, tracks player position, draws charge ring and target outline) → `fire`. HP pips rendered for multi-HP enemies.
+- `Powerup` — spawns mid-wave on waves 2 and 3, 5s pickup window, pulsing purple glow that speeds up as timer runs out.
 
 **`js/audio.js`** — All audio. Procedural SFX via Web Audio API (`playShoot`, `playPlayerHit`, `playEnemyDeath`). Background music via HTML5 Audio (`audio/Orbital Colossus.mp3`, loops at 0.35 volume). `initAudio()` must be called on a user gesture (the click-to-play handler) to satisfy browser autoplay policy.
 
@@ -30,12 +31,12 @@ This order is load-order critical. `waves.js` declares the globals `W` (800) and
 ### State Machine
 
 ```
-menu → playing → wave-clear → playing → ... → win
-                     ↓
-                  game-over
+menu → playing → wave-clear → playing → ... → enter-initials → win
+                     ↓                    ↓
+                  game-over              win (if not a high score)
 ```
 
-`wave-clear` has two phases: `'complete'` (2s) → `'incoming'` (2s) → auto-advances to next wave. Both `game-over` and `win` wait for a click to call `initGame()`.
+`wave-clear` has two phases: `'complete'` (2s) → `'incoming'` (2s) → auto-advances to next wave. `game-over` restarts on spacebar. `win` restarts on click. `enter-initials` uses arrow keys (↑↓ cycle letter, → advance slot) and saves to localStorage on the third letter.
 
 ### Key Patterns
 
@@ -44,7 +45,7 @@ menu → playing → wave-clear → playing → ... → win
 - **Wave timer:** Each wave runs for `WAVE_DURATION` (20s). When `waveTimer` hits 0, all enemies and bullets are cleared instantly and the wave-clear sequence begins.
 - **Collision:** Circle–circle via `Math.hypot`. Player bullets check all enemies; enemy bullets check player only. Dead entities are filtered out after collision resolution each frame.
 - **`startWave()`** clears both `enemies` and `bullets` — bullets mid-flight when a wave ends are discarded.
-- **Enemies remaining counter** (`drawHUD`) = `enemies.length + spawnQueue.length`, so it counts both alive enemies and those not yet spawned.
+- **Leaderboard:** `js/leaderboard.js` manages localStorage under key `retro_survival_scores` — top 5 `{initials, score}` objects sorted by score. Shown on menu, win, and game-over screens.
 
 ## Git Workflow
 

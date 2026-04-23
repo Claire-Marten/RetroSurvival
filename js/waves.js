@@ -17,6 +17,6 @@ const WAVES = [
   {
     spawnRate: 0.8,
     powerupTime: 7,
-    weights: { grunt: 30, speeder: 35, tank: 35 },
+    weights: { grunt: 28, speeder: 34, tank: 30, sniper: 8 },
   },
 ];

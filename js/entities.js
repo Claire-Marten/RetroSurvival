@@ -166,7 +166,8 @@ class Powerup {
 const ENEMY_TYPES = {
   grunt:   { radius: 12, hp: 1, speed: 90,  fireRate: 2.0, color: '#ff6b35', pattern: 'single', bulletSpeed: 200, score: 100 },
   speeder: { radius: 14, hp: 1, speed: 160, fireRate: 0.6, color: '#ffd166', pattern: 'single', bulletSpeed: 350, score: 150 },
-  tank:    { radius: 22, hp: 3, speed: 55,  fireRate: 1.5, color: '#c9184a', pattern: 'spread', bulletSpeed: 150, score: 300 },
+  tank:    { radius: 22, hp: 3, speed: 55,  fireRate: 1.5, color: '#c9184a', pattern: 'spread', bulletSpeed: 75, score: 300 },
+  sniper:  { radius: 14, hp: 2, speed: 90,  fireRate: 3.0, color: '#b042ff', pattern: 'sniper', bulletSpeed: 600, score: 200 },
 };
 
 class Enemy {
@@ -189,22 +190,69 @@ class Enemy {
     this.spinSpeed = (Math.random() * 1.5 + 0.5) * (Math.random() < 0.5 ? 1 : -1);
     this.dead = false;
     this.hitFlash = 0;
+    this.sniperState = 'flying-in';
+    this.entryTimer = 2;
+    this.chargeTimer = 0;
+    this.chargeMax = 1.2;
+    this.targetX = 0;
+    this.targetY = 0;
   }
 
   update(dt, playerX, playerY) {
     const dx = playerX - this.x;
     const dy = playerY - this.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist > 0) {
+    if (dist > 0 && this.pattern !== 'sniper') {
       this.x += (dx / dist) * this.speed * dt;
       this.y += (dy / dist) * this.speed * dt;
     }
+
+    if (this.pattern === 'sniper') {
+      if (this.sniperState === 'flying-in') {
+        const minDist = Math.min(this.x, W - this.x, this.y, H - this.y);
+        if (minDist < 100) {
+          const tdx = W / 2 - this.x;
+          const tdy = H / 2 - this.y;
+          const td = Math.sqrt(tdx * tdx + tdy * tdy);
+          this.x += (tdx / td) * this.speed * dt;
+          this.y += (tdy / td) * this.speed * dt;
+        } else {
+          this.sniperState = 'waiting';
+        }
+      } else if (this.sniperState === 'waiting') {
+        this.entryTimer -= dt;
+        if (this.entryTimer <= 0) {
+          this.sniperState = 'cooldown';
+          this.fireTimer = this.fireRate;
+        }
+      } else if (this.sniperState === 'cooldown') {
+        this.fireTimer -= dt;
+        if (this.fireTimer <= 0) {
+          this.sniperState = 'charging';
+          this.chargeTimer = this.chargeMax;
+        }
+      } else if (this.sniperState === 'charging') {
+        this.chargeTimer -= dt;
+        this.targetX = playerX;
+        this.targetY = playerY;
+        if (this.chargeTimer <= 0) this.sniperState = 'fire';
+      }
+    } else {
+      this.fireTimer -= dt;
+    }
+
     this.spinAngle += this.spinSpeed * dt;
-    this.fireTimer -= dt;
     if (this.hitFlash > 0) this.hitFlash -= dt;
   }
 
   tryShoot(playerX, playerY) {
+    if (this.pattern === 'sniper') {
+      if (this.sniperState !== 'fire') return [];
+      this.sniperState = 'cooldown';
+      this.fireTimer = this.fireRate;
+      const angle = Math.atan2(this.targetY - this.y, this.targetX - this.x);
+      return [new Bullet(this.x, this.y, angle, this.bulletSpeed, this.color, 10, 'enemy')];
+    }
     if (this.fireTimer > 0) return [];
     this.fireTimer = this.fireRate;
     const angle = Math.atan2(playerY - this.y, playerX - this.x);
@@ -239,6 +287,32 @@ class Enemy {
     ctx.closePath();
     ctx.fill();
     ctx.shadowBlur = 0;
+
+    if (this.pattern === 'sniper' && this.sniperState === 'charging') {
+      const progress = 1 - this.chargeTimer / this.chargeMax;
+      const pulse = Math.sin(Date.now() / 80) * 0.3 + 0.7;
+      ctx.save();
+      ctx.resetTransform();
+      // Charge ring on sniper
+      ctx.strokeStyle = `rgba(176,66,255,${progress * pulse})`;
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#b042ff';
+      ctx.shadowBlur = 10 + progress * 14;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius + 4 + progress * 10, 0, Math.PI * 2);
+      ctx.stroke();
+      // Target outline at player position
+      ctx.strokeStyle = `rgba(176,66,255,${0.3 + progress * 0.5})`;
+      ctx.lineWidth = 2;
+      ctx.shadowBlur = 8;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.arc(this.targetX, this.targetY, 10 + progress * 6, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
     if (this.maxHp > 1) {
       for (let i = 0; i < this.maxHp; i++) {
         ctx.fillStyle = i < this.hp ? '#ffffff' : 'rgba(255,255,255,0.2)';

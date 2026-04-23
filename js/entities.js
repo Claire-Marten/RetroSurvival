@@ -29,9 +29,9 @@ class Player {
     if (this.shootCooldown > 0) return null;
     this.shootCooldown = 0.2;
     const angle = Math.atan2(mouseY - this.y, mouseX - this.x);
-    if (!tripleShot) return [new Bullet(this.x, this.y, angle, 500, '#e94560', 4, 'player')];
+    if (!tripleShot) return [new Bullet(this.x, this.y, angle, 500, '#00d4ff', 4, 'player')];
     return [-0.05, 0, 0.05].map(offset =>
-      new Bullet(this.x, this.y, angle + offset, 500, '#e94560', 4, 'player')
+      new Bullet(this.x, this.y, angle + offset, 500, '#00d4ff', 4, 'player')
     );
   }
 
@@ -47,10 +47,10 @@ class Player {
     ctx.translate(this.x, this.y);
     // angle from atan2 points right at 0; rotate +90° so triangle tip points "forward"
     ctx.rotate(this.angle + Math.PI / 2);
-    ctx.shadowColor = '#e94560';
+    ctx.shadowColor = '#00d4ff';
     ctx.shadowBlur = 14;
     const flashing = this.invincibleTimer > 0 && Math.floor(this.invincibleTimer * 10) % 2 === 0;
-    ctx.fillStyle = flashing ? '#ffffff' : '#e94560';
+    ctx.fillStyle = flashing ? '#ffffff' : '#00d4ff';
     ctx.beginPath();
     ctx.moveTo(0, -this.radius);
     ctx.lineTo(this.radius * 0.65, this.radius * 0.7);

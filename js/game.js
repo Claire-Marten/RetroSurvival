@@ -120,15 +120,15 @@ function drawHeart(x, y, filled) {
   ctx.bezierCurveTo(0, 0, 7, 0, 7, 4);
   ctx.bezierCurveTo(7, 0, 14, 0, 14, 4);
   ctx.bezierCurveTo(14, 7, 7, 10, 7, 12);
-  ctx.fillStyle = filled ? '#e94560' : '#2a2a4a';
-  if (filled) { ctx.shadowColor = '#e94560'; ctx.shadowBlur = 8; }
+  ctx.fillStyle = filled ? '#00d4ff' : '#2a2a4a';
+  if (filled) { ctx.shadowColor = '#00d4ff'; ctx.shadowBlur = 8; }
   ctx.fill();
   ctx.restore();
 }
 
 function drawCrosshair() {
   ctx.save();
-  ctx.strokeStyle = 'rgba(233,69,96,0.6)';
+  ctx.strokeStyle = 'rgba(0,212,255,0.6)';
   ctx.lineWidth = 1;
   const r = 8;
   ctx.beginPath();
